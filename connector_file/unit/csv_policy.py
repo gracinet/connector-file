@@ -61,9 +61,7 @@ class CSVParsePolicy(ParsePolicy):
             context=s.context
         )
         self.model.write(s.cr, s.uid, attachment_b_id, {
-            'prepared_header': self._parse_header_data(file_like,
-                                                       backend.delimiter,
-                                                       backend.quotechar),
+            'prepared_header': self._parse_header_data(file_like, backend),
             'sync_date': datetime.now().strftime(
                 DEFAULT_SERVER_DATETIME_FORMAT
             ),
@@ -77,9 +75,7 @@ class CSVParsePolicy(ParsePolicy):
             context=s.context
         )
 
-        for chunk_data in self._split_data_in_chunks(file_like_2,
-                                                     backend.delimiter,
-                                                     backend.quotechar):
+        for chunk_data in self._split_data_in_chunks(file_like_2, backend):
 
             chunk_data.update({
                 'attachment_binding_id': attachment_b_id,
@@ -89,14 +85,19 @@ class CSVParsePolicy(ParsePolicy):
             chunk_b_obj.create(s.cr, s.uid, chunk_data, context=s.context)
 
     @staticmethod
-    def _split_data_in_chunks(data, delimiter, quotechar):
-        """Take a file-like object, and return chunk data."""
+    def _split_data_in_chunks(data, backend):
+        """Take a file-like object, and return chunk data.
+
+        :param backend: backend model browse record, or any object having
+                        the same attributes as their configuration fields
+                        (such as ``delimiter``).
+        """
         with data as file_like:
             file_like.seek(0)
             reader = csv.reader(
                 file_like,
-                delimiter=str(delimiter),
-                quotechar=str(quotechar),
+                delimiter=str(backend.delimiter),
+                quotechar=str(backend.quotechar),
             )
 
             # skip the header
@@ -134,15 +135,20 @@ class CSVParsePolicy(ParsePolicy):
                 }
 
     @staticmethod
-    def _parse_header_data(data, delimiter, quotechar):
-        """Take a file-like object, and return JSON-parsed header."""
+    def _parse_header_data(data, backend):
+        """Take a file-like object, and return JSON-parsed header.
+
+        :param backend: backend model browse record, or any object having
+                        the same attributes as their configuration fields
+                        (such as ``delimiter``).
+        """
         with data as file_like:
             file_like.seek(0)
 
             reader = csv.reader(
                 file_like,
-                delimiter=str(delimiter),
-                quotechar=str(quotechar),
+                delimiter=str(backend.delimiter),
+                quotechar=str(backend.quotechar),
             )
 
             try:

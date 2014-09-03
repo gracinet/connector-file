@@ -20,9 +20,6 @@
 ##############################################################################
 import csv
 import simplejson
-from datetime import datetime
-
-from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 from openerp.addons.connector_file.unit.csv_policy import CSVParsePolicy
 from ..backend import file_import_bank_statement
@@ -99,64 +96,13 @@ class StatementCSVParsePolicy(CSVParsePolicy):
     record
     """
 
-    def parse_one(self, attachment_b_id):
-        """Parse the attachment and split it into chunks.
-
-        The sole purpose of this override is to pass the whole
-        backend configuration to :meth:`_split_data_in_chunks` instead of
-        just the CSV parsing parameters.
-        TODO: submit this modification to connector_file.
-        """
-        s = self.session
-        chunk_b_obj = s.pool['file.chunk.binding']
-        attachment_b = s.browse(self.model._name, attachment_b_id)
-
-        if attachment_b.parse_state != 'pending':
-            return
-
-        backend = attachment_b.backend_id
-
-        file_like = self.model.get_file_like(
-            s.cr,
-            s.uid,
-            [attachment_b_id],
-            context=s.context
-        )
-        self.model.write(s.cr, s.uid, attachment_b_id, {
-            'prepared_header': self._parse_header_data(file_like,
-                                                       backend.delimiter,
-                                                       backend.quotechar),
-            'sync_date': datetime.now().strftime(
-                DEFAULT_SERVER_DATETIME_FORMAT
-            ),
-            'parse_state': 'done',
-        })
-
-        file_like_2 = self.model.get_file_like(
-            s.cr,
-            s.uid,
-            [attachment_b_id],
-            context=s.context
-        )
-
-        for chunk_data in self._split_data_in_chunks(file_like_2, backend):
-
-            chunk_data.update({
-                'attachment_binding_id': attachment_b_id,
-                'backend_id': backend.id,
-            })
-
-            chunk_b_obj.create(s.cr, s.uid, chunk_data, context=s.context)
-
     @staticmethod
     def _split_data_in_chunks(data, backend):
         """Generator that yields appropriate chunks for bank statements.
 
         :param data: a file like object with CSV content (including header)
-        :param delimiter: CSV delimiter
-        :param quotechar: CSV quote char
-
-        For now, stupid implementation, a chunk is made of at most 50 lines.
+        :param backend: browse record of the relevant backend model, or any
+                        object having the same attributes.
         """
 
         with data as file_like:

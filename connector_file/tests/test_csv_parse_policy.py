@@ -4,6 +4,7 @@ import unittest2
 import contextlib
 from cStringIO import StringIO
 import textwrap
+import mock
 
 from ..unit.csv_policy import CSVParsePolicy
 from .common import expand_path
@@ -28,6 +29,9 @@ class TestCSVParsePolicy(unittest2.TestCase):
         self.expected_parsed_chunk = '[["1728274", "2014-02-02", "02/2014", "Sales Journal - (test)", "X11001", "Bank Wealthy and sons", "Camptocamp", "", "37.8", "", ""], ["", "", "", "", "X1111", "Bank Wealthy and sons", "Camptocamp", "AA009", "", "31.5", "taxcode1"], ["", "", "", "", "X2001", "Bank Wealthy and sons", "Camptocamp", "AA001", "", "3.83", "taxcode1"], ["", "", "", "", "X2110", "Bank Wealthy and sons", "Camptocamp", "AA001", "3.83", "", "taxcode1"], ["", "", "", "", "X1000", "Bank Wealthy and sons", "Camptocamp", "", "", "6.3", "taxcode2"], ["", "", "", "", "X1000", "Bank Wealthy and sons", "Camptocamp", "", "", "-0", "taxcode2"]]'  # noqa
         self.expected_parsed_chunk_2 = '[["1728277", "2014-02-02", "02/2014", "Sales Journal - (test)", "X11001", "Bank Wealthy and sons", "OpenERP SA", "", "56.4", "", ""], ["", "", "", "", "X1111", "Bank Wealthy and sons", "OpenERP SA", "AA009", "", "43.17", "taxcode1"], ["", "", "", "", "X2001", "Bank Wealthy and sons", "OpenERP SA", "AA001", "", "3.83", "taxcode1"], ["", "", "", "", "X1000", "Bank Wealthy and sons", "OpenERP SA", "", "", "8.63", "taxcode2"], ["", "", "", "", "X1000", "Bank Wealthy and sons", "OpenERP SA", "", "", "0.77", "taxcode2"]]'  # noqa
 
+        self.backend = b = mock.Mock()
+        b.delimiter, b.quotechar = ';', '"'
+
 
 class TestSplitDataInChunks(TestCSVParsePolicy):
 
@@ -38,7 +42,7 @@ class TestSplitDataInChunks(TestCSVParsePolicy):
 
         input_file = self._prep_data("")
 
-        result = CSVParsePolicy._split_data_in_chunks(input_file, ';', '"')
+        result = CSVParsePolicy._split_data_in_chunks(input_file, self.backend)
 
         self.assertEquals(list(result), [])
 
@@ -49,7 +53,7 @@ class TestSplitDataInChunks(TestCSVParsePolicy):
             header,of,any,kind
             """)
 
-        result = CSVParsePolicy._split_data_in_chunks(input_file, ';', '"')
+        result = CSVParsePolicy._split_data_in_chunks(input_file, self.backend)
 
         self.assertEquals(list(result), [])
 
@@ -57,7 +61,7 @@ class TestSplitDataInChunks(TestCSVParsePolicy):
         """It should return no chunks with a realistic header."""
 
         input_file = open(expand_path('header.csv'))
-        result = CSVParsePolicy._split_data_in_chunks(input_file, ';', '"')
+        result = CSVParsePolicy._split_data_in_chunks(input_file, self.backend)
 
         with self.assertRaises(StopIteration):
             result.next()
@@ -67,7 +71,7 @@ class TestSplitDataInChunks(TestCSVParsePolicy):
 
         input_file = open(expand_path('one_chunk.csv'))
 
-        result = CSVParsePolicy._split_data_in_chunks(input_file, ';', '"')
+        result = CSVParsePolicy._split_data_in_chunks(input_file, self.backend)
 
         result_chunk = result.next()
 
@@ -90,7 +94,7 @@ class TestSplitDataInChunks(TestCSVParsePolicy):
 
         input_file = open(expand_path('two_chunks.csv'))
 
-        result = CSVParsePolicy._split_data_in_chunks(input_file, ';', '"')
+        result = CSVParsePolicy._split_data_in_chunks(input_file, self.backend)
 
         result_chunk = result.next()
 
@@ -133,7 +137,7 @@ class TestParseHeaderData(TestCSVParsePolicy):
 
         input_file = self._prep_data("")
 
-        result = CSVParsePolicy._parse_header_data(input_file, ';', '"')
+        result = CSVParsePolicy._parse_header_data(input_file, self.backend)
 
         self.assertEquals('', result)
 
@@ -142,7 +146,7 @@ class TestParseHeaderData(TestCSVParsePolicy):
 
         input_file = open(expand_path('header.csv'))
 
-        result = CSVParsePolicy._parse_header_data(input_file, ';', '"')
+        result = CSVParsePolicy._parse_header_data(input_file, self.backend)
 
         self.assertEquals(result, self.expected_parsed_header)
 
@@ -151,7 +155,7 @@ class TestParseHeaderData(TestCSVParsePolicy):
 
         input_file = open(expand_path('one_chunk.csv'))
 
-        result = CSVParsePolicy._parse_header_data(input_file, ';', '"')
+        result = CSVParsePolicy._parse_header_data(input_file, self.backend)
 
         self.assertEquals(result, self.expected_parsed_header)
 
@@ -160,6 +164,6 @@ class TestParseHeaderData(TestCSVParsePolicy):
 
         input_file = open(expand_path('two_chunks.csv'))
 
-        result = CSVParsePolicy._parse_header_data(input_file, ';', '"')
+        result = CSVParsePolicy._parse_header_data(input_file, self.backend)
 
         self.assertEquals(result, self.expected_parsed_header)
