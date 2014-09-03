@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data>
+
+    <record id="view_file_backend_version_form" model="ir.ui.view">
+        <field name="name">file.backend.multiversion.form</field>
+        <field name="model">file_import.backend</field>
+        <field name="type">search</field>
+        <field name="inherit_id" ref="connector_file.view_file_backend_form"/>
+        <field name="priority" eval="8"/>
+        <field name="arch" type="xml">
+          <xpath expr="//field[@name='company_id']" position="before">
+            <field name="version"/>
+          </xpath>
+          <xpath expr="//page[@name='advanced_configuration']"
+                 position="before">
+            <!-- About invisible "attr": there does not seem to be a
+                 'like' in JS-side impl of domains -->
+            <page name="bank_statement_configuration"
+                  string="Bank Statement configuration"
+                  attrs="{'invisible': [('version', '!=', 'bank_statement_1')]}">
+              <group>
+                <field name="bank_stmt_profile_id" attrs="{'required': [('version', '=', 'bank_statement_1')]}" />
+                <field name="bank_stmt_chunk_size"/>
+                <field name="bank_stmt_by_date"/>
+                <field name="bank_stmt_by_label"/>
+              </group>
+            </page>
+          </xpath>
+        </field>
+    </record>
+
+  </data>
+</openerp>

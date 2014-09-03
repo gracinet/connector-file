@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data>
+
+    <record id="view_chunk_binding_bank_statement_form" model="ir.ui.view">
+      <field name="inherit_id" ref="connector_file.view_chunk_binding_form" />
+      <field name="model">file.chunk.binding</field>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='move_id']" position="after">
+          <field name="bank_statement_id" />
+        </xpath>
+      </field>
+    </record>
+
+  </data>
+</openerp>
