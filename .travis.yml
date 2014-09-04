@@ -16,6 +16,8 @@ install:
   - pip install -r requirements.txt
   - travis_install_nightly
   - git clone git://github.com/OCA/connector.git -b 7.0 --depth 1 $HOME/connector
+  - git clone git@github.com:OCA/bank-statement-reconcile.git -b 7.0 --depth 1 $HOME/bank-statement-reconcile 
+
 
 script:
   - travis_run_flake8
