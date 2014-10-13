@@ -1,0 +1,17 @@
+<openerp>
+  <data>
+    <record model="account.statement.profile" id="account_statement_profile">
+      <field name="commission_account_id" search="[('code', '=', 'X2111')]"/>
+      <field name="import_type">generic_csvxls_so</field>
+      <field name="journal_id" ref="account.bank_journal"/>
+      <field name="name">Statement profile - (test)</field>
+      <field name="receivable_account_id" search="[('code', '=', 'X11002')]"/>
+      <field name="rule_ids" eval="[(6, 0, [ref('account_statement_base_completion.bank_statement_completion_rule_4')])]"/>
+    </record>
+    <record model="file_import.backend" id="file_import_backend_test_statements">
+      <field name="bank_stmt_profile_id" ref="tests.account_statement_profile"/>
+      <field name="name">Test Statements</field>
+      <field name="version">bank_statement_1</field>
+    </record>
+  </data>
+</openerp>
