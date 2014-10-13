@@ -19,6 +19,7 @@
 #
 ##############################################################################
 import csv
+import osv
 import simplejson as json
 from binascii import b2a_base64
 from cStringIO import StringIO
@@ -83,10 +84,22 @@ class StatementLoadPolicy(MoveLoadPolicy):
         try:
             # called method has a bogus parameter 'ids' (unused),
             # that we're forced to pass anyway, same as the wizard also does
-            st_id = profile_obj.statement_import(s.cr, s.uid, False,
-                                                 profile_id,
-                                                 b2a_base64(csv_stream.read()),
-                                                 context=s.context)
+            # it's tempting to use _statement_import, let's try not to do it
+            st_ids = profile_obj.multi_statement_import(
+                s.cr, s.uid, False,
+                profile_id,
+                b2a_base64(csv_stream.read()),
+                context=s.context)
+            if len(st_ids) > 1:
+                # GR I'm not really sure what the most appropriate exc is
+                raise osv.except_osv(
+                    "Wrong configuration",
+                    "The parser for import profile %d "
+                    "should not issue multiple statements "
+                    "to be used in "
+                    "connector_file_bank_statement " % profile_id)
+            st_id = st_ids[0]
+
             chunk_b.write(dict(bank_statement_id=st_id))
             st_obj = s.pool['account.bank.statement']
 
